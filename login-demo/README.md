@@ -15,9 +15,9 @@ npm run serve
 npm run build
 ```
 
-### Lints and fixes files
+### requires .env
 ```
-npm run lint
+set VUE_APP_API_URL in file
 ```
 
 ### Customize configuration
