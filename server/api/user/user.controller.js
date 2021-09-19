@@ -6,12 +6,15 @@ const login = async (req, res, next) => {
     try {
         const { username, password } = req.body;
         const [user, error] = await userService.login({ username, password });
-        if (!user || !user.is_active) {
-            throw new CustomError(401, error || '_id required');
+        console.log("🚀 ~ file: user.controller.js ~ line 9 ~ login ~ user", user)
+
+        
+        if (error || !user || !user.is_active) {
+            throw new CustomError(401, error || 'authorization denied');
         }
-        delete user.password;
+
         const token = await tokenService.sign(user);
-        return { user, token }
+        return res.json({ user, token })
     } catch (error) {
         next(error)
     }
@@ -25,8 +28,8 @@ const signup = async (req, res, next) => {
             if (!userSignData[key]) throw new CustomError(400, 'missing data to create new user: ' + JSON.stringify(userSignData));
         }
         const [user, error] = await userService.signup(userSignData);
-        if (error) throw new CustomError(400, error);
-        if (!user) throw new CustomError(400, 'user signup failed');
+        if (error || !user) throw new CustomError(400, error);
+        // if (!user) throw new CustomError(400, 'user signup failed');
 
         delete user.password;
         const token = await tokenService.sign(user);

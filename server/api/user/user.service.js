@@ -7,14 +7,21 @@ const login = async ({ username, password }) => {
   try {
 
     const user = await User.findOne({
-      where: { username, password },
+      where: { username },
     });
-    if (!CryptoHandler.decrypt(password)) {
-      console.log('bad pw')
+    if (!user) return [null, 'not found']
+
+    // compare pw hash from user input vs db stored pw
+    const hashResult = await CryptoHandler.compare(password, user.password)
+
+    if (!hashResult) {
       return [null, 'not authorized']
     }
-    if (!user) return [null, 'not found']
-    return [user, null]
+
+    const returnUser = JSON.parse(JSON.stringify(user))
+    delete returnUser.password;
+
+    return [returnUser, null]
   } catch (error) {
     console.log("🚀 ~ file: user.service.js ~ line 19 ~ login ~ error", error)
     return [null, error]
@@ -23,10 +30,10 @@ const login = async ({ username, password }) => {
 
 const signup = async (userSignData) => {
   try {
-    Object.assign(
-      userSignData,
-      { password: CryptoHandler.encrypt(userSignData.password) }
-    )
+
+    const hashedPW = await CryptoHandler.hash(userSignData.password)
+    userSignData.password = hashedPW
+
     const user = await User.create(userSignData)
     return [user, null]
   } catch (error) {
@@ -35,10 +42,11 @@ const signup = async (userSignData) => {
   }
 };
 
-const getUsers = async (userSignData) => {
+const getUsers = async () => {
   try {
-
-    const users = await User.findAll({})
+    const users = await User.findAll({
+      attributes: { exclude: ['password'] }
+    })
     return [users, null]
   } catch (error) {
     console.log("🚀 ~ file: user.service.js ~ line 44 ~ getUsers ~ error", error)
