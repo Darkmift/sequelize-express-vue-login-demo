@@ -6,9 +6,7 @@ const login = async (req, res, next) => {
     try {
         const { username, password } = req.body;
         const [user, error] = await userService.login({ username, password });
-        console.log("🚀 ~ file: user.controller.js ~ line 9 ~ login ~ user", user)
 
-        
         if (error || !user || !user.is_active) {
             throw new CustomError(401, error || 'authorization denied');
         }
@@ -33,8 +31,7 @@ const signup = async (req, res, next) => {
 
         delete user.password;
         const token = await tokenService.sign(user);
-        const loggedUser = user.get({ plain: true });
-        return res.json({ user: loggedUser, token })
+        return res.json({ user, token })
     } catch (error) {
         next(error)
     }
@@ -45,7 +42,7 @@ const getUsers = async (req, res) => {
         const [users, error] = await userService.getUsers()
         if (error) throw new CustomError(400, error);
 
-        return res.json(users)
+        return res.json({users})
     } catch (error) {
         next(error)
     }
